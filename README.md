@@ -1,4 +1,4 @@
-# treesitter-metal
+# tree-sitter-metal
 
 A tiny Neovim runtime plugin for Metal Shading Language (`.metal`) and
 metal-cpp files.
@@ -17,12 +17,12 @@ their own configuration and queries.
 
 ## LazyVim
 
-Add this to `lua/plugins/treesitter-metal.lua`:
+Add this to `lua/plugins/tree-sitter-metal.lua`:
 
 ```lua
 return {
   {
-    "willinki/treesitter-metal",
+    "willinki/tree-sitter-metal",
     lazy = false, -- register filetypes before the first file is opened
   },
   {
