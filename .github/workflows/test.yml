@@ -1,0 +1,39 @@
+name: Test
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        neovim: [v0.9.5, stable]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: ${{ matrix.neovim }}
+      - uses: actions/checkout@v4
+        with:
+          repository: tree-sitter/tree-sitter-cpp
+          ref: v0.23.4
+          path: .test-deps/cpp
+      - uses: actions/checkout@v4
+        with:
+          repository: tree-sitter/tree-sitter-c
+          ref: v0.23.4
+          path: .test-deps/c
+      - name: Build parser and assemble highlight queries
+        run: |
+          mkdir -p .test-deps/runtime/parser .test-deps/runtime/queries/{cpp,c}
+          cc -O2 -shared -fPIC -I.test-deps/cpp/src \
+            .test-deps/cpp/src/parser.c .test-deps/cpp/src/scanner.c \
+            -o .test-deps/runtime/parser/cpp.so
+          cp .test-deps/c/queries/highlights.scm .test-deps/runtime/queries/c/
+          { printf '; inherits: c\n'; cat .test-deps/cpp/queries/highlights.scm; } \
+            > .test-deps/runtime/queries/cpp/highlights.scm
+      - name: Regression and integration tests
+        env:
+          TREESITTER_METAL_TEST_RUNTIME: ${{ github.workspace }}/.test-deps/runtime
+        run: nvim --clean -i NONE --headless -l tests/run.lua

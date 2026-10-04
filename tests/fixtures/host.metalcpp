@@ -1,0 +1,9 @@
+#include <Metal/Metal.hpp>
+
+int main() {
+    MTL::Device* device = MTL::CreateSystemDefaultDevice();
+    MTL::CommandQueue* queue = device->newCommandQueue();
+    queue->release();
+    device->release();
+    return 0;
+}
