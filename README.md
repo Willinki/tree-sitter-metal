@@ -13,7 +13,7 @@ metal-cpp files.
   Tree-sitter parser.
 
 This plugin starts highlighting only. Folds, motions, and text objects require
-their own configuration and queries.
+their own configuration and queries. For an LSP server see below.
 
 ## LazyVim
 
@@ -107,3 +107,41 @@ The CI workflow builds the upstream parser and runs both suites. Shader tests
 ## License
 
 [MIT](LICENSE)
+
+## LSP and Autocomplete
+
+```lua
+-- metal-analyzer: LSP for Apple Metal Shading Language
+-- https://github.com/computer-graphics-tools/metal-analyzer
+--
+-- Binary is installed manually (no Mason package yet), e.g. in ~/.local/bin.
+-- Diagnostics require `xcrun metal` (full Xcode + MetalToolchain component);
+-- formatting requires clang-format.
+return {
+  {
+    "neovim/nvim-lspconfig",
+    opts = {
+      servers = {
+        metal_analyzer = {
+          mason = false, -- not available through mason-lspconfig
+          cmd = { "metal-analyzer" }, -- add "--verbose", "--log-messages" to debug (~/.metal-analyzer/)
+          filetypes = { "metal" }, -- filetype registered by willinki/tree-sitter-metal
+          root_markers = { "metalfmt.toml", ".clang-format", "Package.swift", ".git" },
+          -- Settings are read from initializationOptions (camelCase keys),
+          -- either flattened like this or scoped under "metal-analyzer".
+          init_options = {
+            compiler = {
+              platform = "macos",
+              includePaths = {},
+              extraFlags = {},
+            },
+            diagnostics = { onType = true, onSave = true, scope = "openFiles" },
+            formatting = { enable = true },
+            indexing = { enable = true },
+          },
+        },
+      },
+    },
+  },
+}
+```
