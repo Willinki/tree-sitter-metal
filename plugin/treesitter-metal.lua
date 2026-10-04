@@ -16,15 +16,20 @@ vim.filetype.add({
   },
 })
 
--- Metal Shading Language and metal-cpp are C++-derived.  Reusing the C++
--- parser keeps this plugin dependency-free and avoids carrying a duplicate
--- compiled grammar.
-vim.treesitter.language.register("cpp", { "metal", "metal_cpp" })
+-- MSL uses its own lexical highlighter; host-side metal-cpp is ordinary C++.
+-- Do not let parser managers attach the incompatible C++ parser to shaders.
+vim.treesitter.language.register("metal", "metal")
+vim.treesitter.language.register("cpp", "metal_cpp")
 
 local group = vim.api.nvim_create_augroup("treesitter-metal", { clear = true })
 local function start(buf)
   local ft = vim.bo[buf].filetype
-  if ft ~= "metal" and ft ~= "metal_cpp" then
+  if ft == "metal" then
+    vim.treesitter.stop(buf)
+    vim.bo[buf].syntax = "metal"
+    return
+  end
+  if ft ~= "metal_cpp" then
     return
   end
   local ok, err = pcall(vim.treesitter.start, buf, "cpp")
