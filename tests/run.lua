@@ -66,14 +66,17 @@ test("new and existing files trigger detection and highlighting", function()
 end)
 test("only host-side C++ filetypes use the C++ parser", function()
   equal("metal", vim.treesitter.language.get_lang("metal"))
-  for _, ft in ipairs({ "metal_cpp", "cpp" }) do
-    equal("cpp", vim.treesitter.language.get_lang(ft))
-  end
+  equal("cpp", vim.treesitter.language.get_lang("metal_cpp"))
+  -- plain cpp is left to Neovim (nil before 0.11, "cpp" after); only check it is not hijacked
+  assert(vim.treesitter.language.get_lang("cpp") ~= "metal")
 end)
 test("inherits C++ editing settings and undoes them on filetype change", function()
+  -- the C++ commentstring changed across Neovim versions (/*%s*/ before 0.11, // %s after)
+  buffer("cpp")
+  local cpp_commentstring = vim.bo.commentstring
   for _, ft in ipairs({ "metal", "metal_cpp" }) do
     buffer(ft)
-    equal("// %s", vim.bo.commentstring)
+    equal(cpp_commentstring, vim.bo.commentstring)
     equal(true, vim.bo.cindent)
     vim.bo.filetype = "text"
     equal(vim.go.commentstring, vim.bo.commentstring)
